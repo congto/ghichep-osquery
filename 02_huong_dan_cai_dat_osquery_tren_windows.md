@@ -100,4 +100,10 @@ Ta sẽ có kết quả
 
 ![osquerywin11](https://image.prntscr.com/image/8cCjQUCNTcCfuyihmmISlg.png)
 
+### Liệt kê các extenion cài trên google chrome
+
+```
+select * from chrome_extensions;
+```
+
 Tới đây, bạn có thể tìm hiểu thêm các lệnh mà osquery đã hỗ trợ với windows tại: https://osquery.io/schema/4.1.2
