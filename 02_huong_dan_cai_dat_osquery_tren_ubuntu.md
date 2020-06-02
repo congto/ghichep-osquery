@@ -72,6 +72,9 @@
 		/usr/bin/osqueryi
 		```
 
+- Cần lưu ý các file thực thi có tên là `osqueryi`, `osqueryd` và `osqueryctl` để dùng trong quá trình thực hành sau này.
+
+
 Sau khi cài đặt xong, service osqueryd chưa được khởi động, kiểm tra bằng lệnh `systemctl status osqueryd.service`
 		```
 		root@osqueryclient1:/etc/osquery# systemctl status osqueryd.service
@@ -81,9 +84,9 @@ Sau khi cài đặt xong, service osqueryd chưa được khởi động, kiểm
 
 		```
 
-Tiếp theo, trong hướng dẫn này sẽ tiến hành sửa một số cấu hình cơ bản của osquery trước khi start.
+Tiếp theo, trong hướng dẫn này sẽ tiến hành sửa một số cấu hình cơ bản của osquery trước khi `start.`
 
-- File cấu hình của osquery sẽ nằm tại file `/var/osquery/osquery.conf`. File này có định dạng json theo cấu trúc
+- File cấu hình của osquery sẽ nằm tại file `/var/osquery/osquery.conf`. Khai cài osquery trên ubuntu 18.04 ta sẽ thấy nội dung của file này chưa có gì. File này có định dạng json theo cấu trúc như sau:
 
 ```
 {
@@ -115,7 +118,13 @@ Tiếp theo, trong hướng dẫn này sẽ tiến hành sửa một số cấu 
   - `"schedule"`:  Khai báo để lập lịch định kỳ chạy các câu truy vấn mà ta chỉ định.
   - `"packs"`: Là đường dẫn chứa các khai báo các cấu hình chuyên biệt theo nhóm được cấu hình sẵn.
 
-Thực hiện khai báo một số cấu hình căn bẳn trong file `/etc/osquery/osquery.conf`. Cụ thể như sau
+Trước khi start osquery
+
+Thực hiện khai báo một số cấu hình căn bẳn trong file `/etc/osquery/osquery.conf`. Để có một file khai báo đầy đủ, thực hiện copy file cấu hình mẫu cho osquery. Thực hiện lệnh dưới:
+
+```
+sudo cp /usr/share/osquery/osquery.example.conf /etc/osquery/osquery.conf
+```
 
 Mở file `/etc/osquery/osquery.conf` và sửa các dòng dưới:
 
@@ -129,26 +138,89 @@ Mở file `/etc/osquery/osquery.conf` và sửa các dòng dưới:
     "logger_path": "/var/log/osquery",
     ```
 
-- Dưới dòng `"schedule": {` thêm đoạn cấu hình dưới
+- Trong section `"schedule": {` sửa dòng `"interval": 3600` thành dòng `"interval": 60`. Ta sẽ có nội dung như bên dưới.
+		```
+		// Define a schedule of queries:
+		"schedule": {
+			// This is a simple example query that outputs basic system information.
+			"system_info": {
+				// The exact query to run.
+				"query": "SELECT hostname, cpu_brand, physical_memory FROM system_info;",
+				// The interval in seconds to run this query, not an exact interval.
+				"interval": 60
+			}
+		},
 
-```
-    // for example, get CPU Time per 60 seconds
-    "cpu_time": {
-      "query": "SELECT * FROM cpu_time;",
-      "interval": 60
-    },
+		```
 
-    // for example, get settings of resolv.conf per an hour
-    "dns_resolvers": {
-      "query": "SELECT * FROM dns_resolvers;",
-      "interval": 120
-    },
+Các khai báo khác tạm thời để nguyên và sẽ khai báo sau.
 
-```
-
-- Ta sẽ có file dạng sau:
-
-![Ảnh cấu hình](https://image.prntscr.com/image/trqfRM0jQsCUbWv6RZPMOw.png)
+- File sau khi khai báo xong sẽ có nội dung như bên dưới. Dùng lệnh `cat /etc/osquery/osquery.conf | egrep -v '^*//|^$'` để loại bỏ các comment và quan sát cho tiện.
+		```
+		{
+			"options": {
+				"config_plugin": "filesystem",
+				"logger_plugin": "filesystem",
+				"logger_path": "/var/log/osquery",
+				"utc": "true"
+			},
+			"schedule": {
+				"system_info": {
+					"query": "SELECT hostname, cpu_brand, physical_memory FROM system_info;",
+					"interval": 60
+				}
+			},
+			"decorators": {
+				"load": [
+					"SELECT uuid AS host_uuid FROM system_info;",
+					"SELECT user AS username FROM logged_in_users ORDER BY time DESC LIMIT 1;"
+				]
+			},
+			"packs": {
+			},
+			"feature_vectors": {
+				"character_frequencies": [
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.00045,  0.01798,
+					0.0,      0.03111,  0.00063,  0.00027,   0.0,      0.01336,  0.0133,
+					0.00128,  0.0027,   0.00655,  0.01932,   0.01917,  0.00432,  0.0045,
+					0.00316,  0.00245,  0.00133,  0.001029,  0.00114,  0.000869, 0.00067,
+					0.000759, 0.00061,  0.00483,  0.0023,    0.00185,  0.01342,  0.00196,
+					0.00035,  0.00092,  0.027875, 0.007465,  0.016265, 0.013995, 0.0490895,
+					0.00848,  0.00771,  0.00737,  0.025615,  0.001725, 0.002265, 0.017875,
+					0.016005, 0.02533,  0.025295, 0.014375,  0.00109,  0.02732,  0.02658,
+					0.037355, 0.011575, 0.00451,  0.005865,  0.003255, 0.005965, 0.00077,
+					0.00621,  0.00222,  0.0062,   0.0,       0.00538,  0.00122,  0.027875,
+					0.007465, 0.016265, 0.013995, 0.0490895, 0.00848,  0.00771,  0.00737,
+					0.025615, 0.001725, 0.002265, 0.017875,  0.016005, 0.02533,  0.025295,
+					0.014375, 0.00109,  0.02732,  0.02658,   0.037355, 0.011575, 0.00451,
+					0.005865, 0.003255, 0.005965, 0.00077,   0.00771,  0.002379, 0.00766,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+					0.0,      0.0,      0.0
+				]
+			}
+		}
+		```
 
 
 - Khởi động `osqueryd`
