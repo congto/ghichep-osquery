@@ -153,6 +153,8 @@ Mở file `/etc/osquery/osquery.conf` và sửa các dòng dưới:
 
 		```
 
+- Đối với khai báo schedule này, thời gian `interval: 60` có nghĩa là 60 giây câu lệnh thuộc schedule sẽ được thực hiện, kết quả của lệnh này sẽ được lưu vào file `/var/log/osquery/osqueryd.results.log`
+
 Các khai báo khác tạm thời để nguyên và sẽ khai báo sau.
 
 - File sau khi khai báo xong sẽ có nội dung như bên dưới. Dùng lệnh `cat /etc/osquery/osquery.conf | egrep -v '^*//|^$'` để loại bỏ các comment và quan sát cho tiện.
@@ -258,6 +260,11 @@ Các khai báo khác tạm thời để nguyên và sẽ khai báo sau.
     Nov 16 07:43:35 osqueryclient osqueryd[1226]: I1116 07:43:35.140792  1229 events.cpp:863] Event publisher not enabled: syslog: Publisher disable...guration
     Hint: Some lines were ellipsized, use -l to show in full.
     ```
+
+- Như đã chỉ ra ở trên, đợi 60s ta có thể qua sát nội dung file `/var/log/osqueryd.results.log`
+	```
+	{"name":"system_info","hostIdentifier":"osqueryclient1","calendarTime":"Tue Jun  2 15:37:36 2020 UTC","unixTime":1591112256,"epoch":0,"counter":0,"numerics":false,"decorations":{"host_uuid":"9DB13784-3AFB-48B5-BCC7-CDAA20E9154D","username":"thuctap"},"columns":{"cpu_brand":"Intel Xeon E312xx (Sandy Bridge, IBRS update)","hostname":"localhost","physical_memory":"4136218624"},"action":"added"}
+	```
 
 - Thực hiện đang nhập vào osquery bằng lệnh `osqueryi`, ta có màn hình tương tác ở chế độ của SQL
     ```
