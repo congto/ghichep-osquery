@@ -418,6 +418,7 @@ Việc add thêm các client khác sẽ lặp lại tương tự như bước tr
 systemctl stop osqueryd
 ```
 
+<<<<<<< HEAD:04_huong_dan_cai_dat_osquery_kolide_fleet.md
 Mở file `/etc/osquery/osquery.flags` và đưa nội dung file như bên dưới.
 
 ```
@@ -445,6 +446,33 @@ Sau đó save file này lại và khởi động lại `osqueryd`, khi đó osqu
 ```
 systemctl start osqueryd
 ```
+=======
+- Mở file `/etc/osquery/osquery.flags` và đưa nội dung file như bên dưới.
+	```
+	--enroll_secret_path=/var/osquery/enroll_secret
+	--tls_server_certs=/var/osquery/server.pem
+	--tls_hostname=192.168.80.141:8080
+	--host_identifier=hostname
+	--enroll_tls_endpoint=/api/v1/osquery/enroll
+	--config_plugin=tls
+	--config_tls_endpoint=/api/v1/osquery/config
+	--config_tls_refresh=10
+	--disable_distributed=false
+	--distributed_plugin=tls
+	--distributed_interval=3
+	--distributed_tls_max_attempts=3
+	--distributed_tls_read_endpoint=/api/v1/osquery/distributed/read
+	--distributed_tls_write_endpoint=/api/v1/osquery/distributed/write
+	--logger_plugin=tls
+	--logger_tls_endpoint=/api/v1/osquery/log
+	--logger_tls_period=10
+	```
+
+- Sau đó save file này lại và khởi động lại `osqueryd`, khi đó osquery sẽ tự động kết nối tới fleet.
+	```
+	systemctl start osqueryd
+	```
+>>>>>>> refs/remotes/hocchudong/master:03_huong_dan_cai_dat_osquery_kolide_fleet.md
 
 - Từ giao diện này ta có thể thực hiện các câu query. Sau hướng dẫn này các bạn sẽ chuyển sang các bước sử dụng giao diện của fleet.
 
