@@ -16,73 +16,74 @@
 #### 2.1.1 Thiết lập cơ bản cho hệ điều hành
 
 -  Cập nhật hệ điều hành và các gói bổ trợ.
-    ```
-    apt update -y && apt upgrade -y
-    ```
+```
+apt update -y && apt upgrade -y
+```
 
 - Thiết lập hostname.
-    ```
-    hostnamectl set-hostname osqueryclient1
-		
-		echo "127.0.0.1       localhost osqueryclient1" > /etc/hosts
+```
+hostnamectl set-hostname osqueryclient1
 
-    bash
-    ```
+echo "127.0.0.1       localhost osqueryclient1" > /etc/hosts
+
+bash
+```
+
 - Cấu hình IP.
-    ```
-    Cấu hình IP tĩnh theo quy hoạch IP của bạn
-    ```
+```
+Cấu hình IP tĩnh theo quy hoạch IP của bạn
+```
 
 - Khởi động lại hệ điều hành
-    ```
-    init 6
-    ````
+```
+init 6
+````
 
 ### 2.2. Cài đặt osquery
 
 - Thực hiện cài đặt osquery với quyền `root`
-    ```
-		apt-get update && apt-get install -my wget gnupg
-   		
-		apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1484120AC4E9F8A1A577AEEE97A80C63C9D8B80B
-		
-		echo "deb [arch=amd64] https://pkg.osquery.io/deb deb main" | tee /etc/apt/sources.list.d/osquery.list
+```
+apt-get update && apt-get install -my wget gnupg
+	
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1484120AC4E9F8A1A577AEEE97A80C63C9D8B80B
 
-		apt update
-		
-		apt install -y osquery
-    ```
+echo "deb [arch=amd64] https://pkg.osquery.io/deb deb main" | tee /etc/apt/sources.list.d/osquery.list
+
+apt update
+
+apt install -y osquery
+```
 
 - Kiểm tra lại phiên bản của osquery khi cài đặt xong bằng lệnh `osqueryd -version`
-    ```
-    [root@osqueryclient1 ~]# osqueryd -version
-    osqueryd version 4.3.0
-    ```
+```
+[root@osqueryclient1 ~]# osqueryd -version
+osqueryd version 4.3.0
+```
 
 - File cấu hình mẫu của osquery nằm tại `/usr/share/osquery/osquery.example.conf`. Một số file cấu hình hoặc file thực thi nằm ở các đường dẫn sau.
-		```
-		/etc/osquery/
-		/usr/share/osquery/osquery.example.conf
-		/usr/share/osquery/lenses/{*}.aug
-		/usr/share/osquery/packs/{*}.conf
-		/var/log/osquery/
-		/usr/lib/osquery/
-		/usr/bin/osqueryctl
-		/usr/bin/osqueryd
-		/usr/bin/osqueryi
-		```
+```
+/etc/osquery/
+/usr/share/osquery/osquery.example.conf
+/usr/share/osquery/lenses/{*}.aug
+/usr/share/osquery/packs/{*}.conf
+/var/log/osquery/
+/usr/lib/osquery/
+/usr/bin/osqueryctl
+/usr/bin/osqueryd
+/usr/bin/osqueryi
+```
 
 - Cần lưu ý các file thực thi có tên là `osqueryi`, `osqueryd` và `osqueryctl` để dùng trong quá trình thực hành sau này.
 
 
 Sau khi cài đặt xong, service osqueryd chưa được khởi động, kiểm tra bằng lệnh `systemctl status osqueryd.service`
-		```
-		root@osqueryclient1:/etc/osquery# systemctl status osqueryd.service
-		● osqueryd.service - The osquery Daemon
-			 Loaded: loaded (/usr/lib/systemd/system/osqueryd.service; disabled; vendor preset: enabled)
-			 Active: inactive (dead)
+```
+root@osqueryclient1:/etc/osquery# systemctl status osqueryd.service
+● osqueryd.service - The osquery Daemon
+	 Loaded: loaded (/usr/lib/systemd/system/osqueryd.service; disabled; vendor preset: enabled)
+	 Active: inactive (dead)
 
-		```
+```
 
 Tiếp theo, trong hướng dẫn này sẽ tiến hành sửa một số cấu hình cơ bản của osquery trước khi `start.`
 
@@ -129,154 +130,155 @@ sudo cp /usr/share/osquery/osquery.example.conf /etc/osquery/osquery.conf
 Mở file `/etc/osquery/osquery.conf` và sửa các dòng dưới:
 
 - Bỏ dòng comment (`//`) tại dòng 
-    ```
-    //"logger_path": "/var/log/osquery",
-    ```
+```
+//"logger_path": "/var/log/osquery",
+```
 
 - Thành dòng 
-    ```
-    "logger_path": "/var/log/osquery",
-    ```
+```
+"logger_path": "/var/log/osquery",
+```
 
 - Trong section `"schedule": {` sửa dòng `"interval": 3600` thành dòng `"interval": 60`. Ta sẽ có nội dung như bên dưới.
-		```
-		// Define a schedule of queries:
-		"schedule": {
-			// This is a simple example query that outputs basic system information.
-			"system_info": {
-				// The exact query to run.
-				"query": "SELECT hostname, cpu_brand, physical_memory FROM system_info;",
-				// The interval in seconds to run this query, not an exact interval.
-				"interval": 60
-			}
-		},
+```
+// Define a schedule of queries:
+"schedule": {
+	// This is a simple example query that outputs basic system information.
+	"system_info": {
+		// The exact query to run.
+		"query": "SELECT hostname, cpu_brand, physical_memory FROM system_info;",
+		// The interval in seconds to run this query, not an exact interval.
+		"interval": 60
+	}
+},
 
-		```
+```
 
 - Đối với khai báo schedule này, thời gian `interval: 60` có nghĩa là 60 giây câu lệnh thuộc schedule sẽ được thực hiện, kết quả của lệnh này sẽ được lưu vào file `/var/log/osquery/osqueryd.results.log`
 
 Các khai báo khác tạm thời để nguyên và sẽ khai báo sau.
 
 - File sau khi khai báo xong sẽ có nội dung như bên dưới. Dùng lệnh `cat /etc/osquery/osquery.conf | egrep -v '^*//|^$'` để loại bỏ các comment và quan sát cho tiện.
-		```
-		{
-			"options": {
-				"config_plugin": "filesystem",
-				"logger_plugin": "filesystem",
-				"logger_path": "/var/log/osquery",
-				"utc": "true"
-			},
-			"schedule": {
-				"system_info": {
-					"query": "SELECT hostname, cpu_brand, physical_memory FROM system_info;",
-					"interval": 60
-				}
-			},
-			"decorators": {
-				"load": [
-					"SELECT uuid AS host_uuid FROM system_info;",
-					"SELECT user AS username FROM logged_in_users ORDER BY time DESC LIMIT 1;"
-				]
-			},
-			"packs": {
-			},
-			"feature_vectors": {
-				"character_frequencies": [
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.00045,  0.01798,
-					0.0,      0.03111,  0.00063,  0.00027,   0.0,      0.01336,  0.0133,
-					0.00128,  0.0027,   0.00655,  0.01932,   0.01917,  0.00432,  0.0045,
-					0.00316,  0.00245,  0.00133,  0.001029,  0.00114,  0.000869, 0.00067,
-					0.000759, 0.00061,  0.00483,  0.0023,    0.00185,  0.01342,  0.00196,
-					0.00035,  0.00092,  0.027875, 0.007465,  0.016265, 0.013995, 0.0490895,
-					0.00848,  0.00771,  0.00737,  0.025615,  0.001725, 0.002265, 0.017875,
-					0.016005, 0.02533,  0.025295, 0.014375,  0.00109,  0.02732,  0.02658,
-					0.037355, 0.011575, 0.00451,  0.005865,  0.003255, 0.005965, 0.00077,
-					0.00621,  0.00222,  0.0062,   0.0,       0.00538,  0.00122,  0.027875,
-					0.007465, 0.016265, 0.013995, 0.0490895, 0.00848,  0.00771,  0.00737,
-					0.025615, 0.001725, 0.002265, 0.017875,  0.016005, 0.02533,  0.025295,
-					0.014375, 0.00109,  0.02732,  0.02658,   0.037355, 0.011575, 0.00451,
-					0.005865, 0.003255, 0.005965, 0.00077,   0.00771,  0.002379, 0.00766,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
-					0.0,      0.0,      0.0
-				]
-			}
+```
+{
+	"options": {
+		"config_plugin": "filesystem",
+		"logger_plugin": "filesystem",
+		"logger_path": "/var/log/osquery",
+		"utc": "true"
+	},
+	"schedule": {
+		"system_info": {
+			"query": "SELECT hostname, cpu_brand, physical_memory FROM system_info;",
+			"interval": 60
 		}
-		```
+	},
+	"decorators": {
+		"load": [
+			"SELECT uuid AS host_uuid FROM system_info;",
+			"SELECT user AS username FROM logged_in_users ORDER BY time DESC LIMIT 1;"
+		]
+	},
+	"packs": {
+	},
+	"feature_vectors": {
+		"character_frequencies": [
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.00045,  0.01798,
+			0.0,      0.03111,  0.00063,  0.00027,   0.0,      0.01336,  0.0133,
+			0.00128,  0.0027,   0.00655,  0.01932,   0.01917,  0.00432,  0.0045,
+			0.00316,  0.00245,  0.00133,  0.001029,  0.00114,  0.000869, 0.00067,
+			0.000759, 0.00061,  0.00483,  0.0023,    0.00185,  0.01342,  0.00196,
+			0.00035,  0.00092,  0.027875, 0.007465,  0.016265, 0.013995, 0.0490895,
+			0.00848,  0.00771,  0.00737,  0.025615,  0.001725, 0.002265, 0.017875,
+			0.016005, 0.02533,  0.025295, 0.014375,  0.00109,  0.02732,  0.02658,
+			0.037355, 0.011575, 0.00451,  0.005865,  0.003255, 0.005965, 0.00077,
+			0.00621,  0.00222,  0.0062,   0.0,       0.00538,  0.00122,  0.027875,
+			0.007465, 0.016265, 0.013995, 0.0490895, 0.00848,  0.00771,  0.00737,
+			0.025615, 0.001725, 0.002265, 0.017875,  0.016005, 0.02533,  0.025295,
+			0.014375, 0.00109,  0.02732,  0.02658,   0.037355, 0.011575, 0.00451,
+			0.005865, 0.003255, 0.005965, 0.00077,   0.00771,  0.002379, 0.00766,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0,      0.0,       0.0,      0.0,      0.0,
+			0.0,      0.0,      0.0
+		]
+	}
+}
+```
 
 
 - Khởi động `osqueryd`
-    ```
-    systemctl start osqueryd
-    systemctl enable osqueryd
-    ```
+```
+systemctl start osqueryd
+systemctl enable osqueryd
+```
 
 - Kiểm tra trạng thái của osquery
-    ```
-    systemctl status osqueryd
-    ```
+```
+systemctl status osqueryd
+```
 
 - Ta có kết quả của osquery như sau là ok
-    ```
-    ● osqueryd.service - The osquery Daemon
-    Loaded: loaded (/usr/lib/systemd/system/osqueryd.service; disabled; vendor preset: disabled)
-    Active: active (running) since Sat 2019-11-16 07:43:35 +07; 4s ago
-    Process: 1223 ExecStartPre=/bin/sh -c if [ -f $LOCAL_PIDFILE ]; then mv $LOCAL_PIDFILE $PIDFILE; fi (code=exited, status=0/SUCCESS)
-    Process: 1220 ExecStartPre=/bin/sh -c if [ ! -f $FLAG_FILE ]; then touch $FLAG_FILE; fi (code=exited, status=0/SUCCESS)
-    Main PID: 1226 (osqueryd)
-    CGroup: /system.slice/osqueryd.service
-            ├─1226 /usr/bin/osqueryd --flagfile /etc/osquery/osquery.flags --config_path /etc/osquery/osquery.conf
-            └─1229 /usr/bin/osqueryd
+```
+● osqueryd.service - The osquery Daemon
+Loaded: loaded (/usr/lib/systemd/system/osqueryd.service; disabled; vendor preset: disabled)
+Active: active (running) since Sat 2019-11-16 07:43:35 +07; 4s ago
+Process: 1223 ExecStartPre=/bin/sh -c if [ -f $LOCAL_PIDFILE ]; then mv $LOCAL_PIDFILE $PIDFILE; fi (code=exited, status=0/SUCCESS)
+Process: 1220 ExecStartPre=/bin/sh -c if [ ! -f $FLAG_FILE ]; then touch $FLAG_FILE; fi (code=exited, status=0/SUCCESS)
+Main PID: 1226 (osqueryd)
+CGroup: /system.slice/osqueryd.service
+				├─1226 /usr/bin/osqueryd --flagfile /etc/osquery/osquery.flags --config_path /etc/osquery/osquery.conf
+				└─1229 /usr/bin/osqueryd
 
-    Nov 16 07:43:34 osqueryclient systemd[1]: Starting The osquery Daemon...
-    Nov 16 07:43:35 osqueryclient systemd[1]: Started The osquery Daemon.
-    Nov 16 07:43:35 osqueryclient osqueryd[1226]: osqueryd started [version=4.0.2]
-    Nov 16 07:43:35 osqueryclient osqueryd[1226]: I1116 07:43:35.080093  1229 database.cpp:570] Checking database version for migration
-    Nov 16 07:43:35 osqueryclient osqueryd[1226]: I1116 07:43:35.080296  1229 database.cpp:594] Performing migration: 0 -> 1
-    Nov 16 07:43:35 osqueryclient osqueryd[1226]: I1116 07:43:35.082423  1229 database.cpp:626] Migration 0 -> 1 successfully completed!
-    Nov 16 07:43:35 osqueryclient osqueryd[1226]: I1116 07:43:35.082475  1229 database.cpp:594] Performing migration: 1 -> 2
-    Nov 16 07:43:35 osqueryclient osqueryd[1226]: I1116 07:43:35.084009  1229 database.cpp:626] Migration 1 -> 2 successfully completed!
-    Nov 16 07:43:35 osqueryclient osqueryd[1226]: I1116 07:43:35.140584  1229 events.cpp:863] Event publisher not enabled: auditeventpublisher: Publ...guration
-    Nov 16 07:43:35 osqueryclient osqueryd[1226]: I1116 07:43:35.140792  1229 events.cpp:863] Event publisher not enabled: syslog: Publisher disable...guration
-    Hint: Some lines were ellipsized, use -l to show in full.
-    ```
+Nov 16 07:43:34 osqueryclient systemd[1]: Starting The osquery Daemon...
+Nov 16 07:43:35 osqueryclient systemd[1]: Started The osquery Daemon.
+Nov 16 07:43:35 osqueryclient osqueryd[1226]: osqueryd started [version=4.0.2]
+Nov 16 07:43:35 osqueryclient osqueryd[1226]: I1116 07:43:35.080093  1229 database.cpp:570] Checking database version for migration
+Nov 16 07:43:35 osqueryclient osqueryd[1226]: I1116 07:43:35.080296  1229 database.cpp:594] Performing migration: 0 -> 1
+Nov 16 07:43:35 osqueryclient osqueryd[1226]: I1116 07:43:35.082423  1229 database.cpp:626] Migration 0 -> 1 successfully completed!
+Nov 16 07:43:35 osqueryclient osqueryd[1226]: I1116 07:43:35.082475  1229 database.cpp:594] Performing migration: 1 -> 2
+Nov 16 07:43:35 osqueryclient osqueryd[1226]: I1116 07:43:35.084009  1229 database.cpp:626] Migration 1 -> 2 successfully completed!
+Nov 16 07:43:35 osqueryclient osqueryd[1226]: I1116 07:43:35.140584  1229 events.cpp:863] Event publisher not enabled: auditeventpublisher: Publ...guration
+Nov 16 07:43:35 osqueryclient osqueryd[1226]: I1116 07:43:35.140792  1229 events.cpp:863] Event publisher not enabled: syslog: Publisher disable...guration
+Hint: Some lines were ellipsized, use -l to show in full.
+```
 
 - Như đã chỉ ra ở trên, đợi 60s ta có thể qua sát nội dung file `/var/log/osqueryd.results.log`
-	```
-	{"name":"system_info","hostIdentifier":"osqueryclient1","calendarTime":"Tue Jun  2 15:37:36 2020 UTC","unixTime":1591112256,"epoch":0,"counter":0,"numerics":false,"decorations":{"host_uuid":"9DB13784-3AFB-48B5-BCC7-CDAA20E9154D","username":"thuctap"},"columns":{"cpu_brand":"Intel Xeon E312xx (Sandy Bridge, IBRS update)","hostname":"localhost","physical_memory":"4136218624"},"action":"added"}
-	```
+```
+{"name":"system_info","hostIdentifier":"osqueryclient1","calendarTime":"Tue Jun  2 15:37:36 2020 UTC","unixTime":1591112256,"epoch":0,"counter":0,"numerics":false,"decorations":{"host_uuid":"9DB13784-3AFB-48B5-BCC7-CDAA20E9154D","username":"thuctap"},"columns":{"cpu_brand":"Intel Xeon E312xx (Sandy Bridge, IBRS update)","hostname":"localhost","physical_memory":"4136218624"},"action":"added"}
+```
 
 - Thực hiện đang nhập vào osquery bằng lệnh `osqueryi`, ta có màn hình tương tác ở chế độ của SQL
-    ```
-    [root@osqueryclient ~]# osqueryi
-    Using a virtual database. Need help, type '.help'
-    osquery>
-    ```
+```
+[root@osqueryclient ~]# osqueryi
+Using a virtual database. Need help, type '.help'
+osquery>
+```
 
 - Thử chạy câu lệnh truy vấn về hệ điều hành.
-    ```
-    select * from os_version; 
-    ```
+```
+select * from os_version; 
+```
+
 - Kết quả trả về là:
 
     ```
